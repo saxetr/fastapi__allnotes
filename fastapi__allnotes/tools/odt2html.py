@@ -1,32 +1,51 @@
-from xml.dom.minidom import parse, parseString, Document, Node, Element
-import zipfile
+"""
+конвернтирует odt документ в html
+поддерживает тэги: h, p, a
+заголовок и абзац - отдельные строки
+абзац может вмещать тег <a> и текст
+"""
 
-from fastapi__allnotes.tools.errors import UnknownTagError
+from xml.dom.minidom import Document, Node, Element
+
+
+from fastapi__allnotes.tools.errors import OdtUnknownTagError, OdtMissedElementAttrError, OdtUnknownHeaderError
+
+
+HEADERS = {"Heading_20_1": "1", "Heading_20_2": "2", "Heading_20_3": "3"}
 
 
 def generate_html_header_tag(element: Element) -> str:
-    HEADERS = {"Heading_20_1": "1", "Heading_20_2": "2", "Heading_20_3": "3"}
+    if not element.hasAttribute('text:style-name'):
+        raise OdtMissedElementAttrError('text:style-name')
+    
     h_attr = element.getAttribute('text:style-name') 
-    header_number = HEADERS[h_attr]
+    try:
+        header_number = HEADERS[h_attr]
+    except KeyError:
+        raise OdtUnknownHeaderError(h_attr)
+        
     return f'<h{header_number}>{element.firstChild.nodeValue}</h{header_number}>'
 
 
 def generate_html_a_tag(element: Element) -> str:
+    if not element.hasAttribute('xlink:href'):
+        raise OdtMissedElementAttrError('xlink:href')
+    
     a_href = element.getAttribute('xlink:href')
     return f'<a href="{a_href}">{element.firstChild.nodeValue}</a>'
 
 
 def generate_html_paragraph_tag(element: Element) -> str:
-    html = '<p>'
+    html = ['<p>']
     for node in element.childNodes:
         if node.nodeType == Node.TEXT_NODE:
-            html += node.nodeValue
+            html.append(node.nodeValue)
 
         elif node.tagName == "text:a":
-            html += generate_html_a_tag(node)
+            html.append(generate_html_a_tag(node))
 
-    html += '</p>'
-    return html
+    html.append('</p>')
+    return ''.join(html)
 
 
 def convert_xml_dom_to_html(document: Document) -> str:
@@ -45,13 +64,6 @@ def convert_xml_dom_to_html(document: Document) -> str:
             res.append(generate_html_paragraph_tag(node))
             continue
 
-        raise UnknownTagError(node.tagName)
+        raise OdtUnknownTagError(node.tagName)
 
     return ''.join(res)
-
-
-
-if __name__ == "__main__": 
-    with zipfile.ZipFile('tmp/tmp.odt') as myzip:
-        with myzip.open('content.xml') as content:
-            print(convert_xml_dom_to_html(parse(content)))
