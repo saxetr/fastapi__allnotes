@@ -12,4 +12,8 @@ def main():
 
 
 if __name__ == "__main__": 
-    main()
+    # main()
+    from fastapi__allnotes.kb.dbschema import metadata_obj
+    from fastapi__allnotes.kb.crud import engine
+    print(metadata_obj)
+    metadata_obj.create_all(engine)
