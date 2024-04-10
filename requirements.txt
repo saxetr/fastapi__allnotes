@@ -1,0 +1,13 @@
+greenlet==3.0.3
+iniconfig==2.0.0
+markdown-it-py==3.0.0
+mdurl==0.1.2
+packaging==24.0
+pluggy==1.4.0
+pprintpp==0.4.0
+Pygments==2.17.2
+pytest==8.1.1
+pytest-clarity==1.0.1
+rich==13.7.1
+SQLAlchemy==2.0.29
+typing_extensions==4.11.0

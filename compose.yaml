@@ -1,0 +1,28 @@
+volumes:
+    db-allnotes:
+
+services:
+  #
+  db_pg:
+    image: "postgres:15.6"
+    environment:
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U postgres"]
+        interval: 1s
+        timeout: 5s
+        retries: 10
+        start_period: 40s
+        start_interval: 5s
+    ports:
+      - name: main_port
+        target: 5432
+        host_ip: 127.0.0.1
+        published: "5432"
+    volumes:
+      - type: volume
+        source: db-allnotes
+        target: /var/lib/postgresql/data
+
+
+    
