@@ -1,6 +1,16 @@
 import pytest
 
+from sqlalchemy.orm import Session
 
+from allnotes.kb.crud import engine
+from allnotes.kb.models import Notes, Versions, CurrentVersions
+
+
+    
+
+# def add_note(title: str, content: str):
+
+# update_note(1, '<p>FUUUUUUUUUUUUUUUUUUUUUUUUUUUu</p>')
 
 @pytest.fixture()
 def make_xml_tag_a():
@@ -20,19 +30,16 @@ def make_xml(make_xml_tag_a):
         'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" ' \
         'xmlns:xlink="http://www.w3.org/1999/xlink">'
     close_office = '</office:text>'
-    def fdfdfdf(tag_name,       # h or p
+    
+    def inner(tag_name,       # h or p
                 tag_style_k=None,
                 tag_style_v=None,
                 tag_value="swesh etih majgkih", 
                 nested_tag_a=False):
         
-        tag_style = (
-                '' if not tag_style_k else f' {tag_style_k}="{tag_style_v}"'
-        )
+        tag_style = '' if not tag_style_k else f' {tag_style_k}="{tag_style_v}"'
         
-        tag_a = (
-                '' if not nested_tag_a else make_xml_tag_a
-        )
+        tag_a = '' if not nested_tag_a else make_xml_tag_a
 
         xml_src = (
                 f'{open_office}'
@@ -44,6 +51,6 @@ def make_xml(make_xml_tag_a):
         
         return xml_src
     
-    return fdfdfdf
+    return inner
 
 
