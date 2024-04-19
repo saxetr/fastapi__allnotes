@@ -1,4 +1,5 @@
 from uuid import uuid4
+from hashlib import md5
 from datetime import datetime
 
 from sqlalchemy import String, ForeignKey
@@ -13,7 +14,7 @@ class Base(DeclarativeBase):
     pass
 
 
-class Notes(Base):
+class Note(Base):
     __tablename__ = "notes"
 
     note_id: Mapped[int] = mapped_column(primary_key=True, autoincrement="auto")
@@ -24,17 +25,18 @@ class Notes(Base):
         return f"Note(note_id={self.note_id!r}, title={self.title!r}"
 
 
-class Versions(Base):
+class Version(Base):
     __tablename__ = "note_versions"
 
     version_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4())   # as_uuid=True?
     note_id = mapped_column(ForeignKey("notes.note_id"), nullable=False)
-    content: Mapped[str] = mapped_column(nullable=False, unique=True)
+    content: Mapped[str] = mapped_column(nullable=False)
     version: Mapped[int] = mapped_column(nullable=False)
     timestamp: Mapped[datetime] = mapped_column(nullable=False, default=datetime.now())
+    # version_id: Mapped[str] = mapped_column(primary_key=True)
 
 
-class CurrentVersions(Base):
+class CurrentVersion(Base):
     __tablename__ = "current_versions"
 
     note_id = mapped_column(ForeignKey("notes.note_id"), primary_key=True)

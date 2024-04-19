@@ -3,10 +3,10 @@ import os
 from dotenv import load_dotenv
 
 from sqlalchemy import create_engine, URL, text
-from sqlalchemy import insert, select, update, delete
-from sqlalchemy.orm import Session
+# from sqlalchemy import insert, select, update, delete
+from sqlalchemy.orm import sessionmaker, Session
 
-from allnotes.kb.models import Notes, Versions, CurrentVersions
+from allnotes.kb.models import Note, Version, CurrentVersion
 # take environment variables from .env.
 load_dotenv()
 
@@ -21,46 +21,40 @@ url_object = URL.create(
 
 engine = create_engine(url_object)
 
-
-def add_note(title: str, content: str):
-    with Session(engine) as session:
-        session.begin()
-
-        new_note = Notes(title=title,)
-        session.add(new_note)
-        session.commit()
+session = sessionmaker(engine)
 
 
+class NoteRepo():
 
+    def __init__(self, session: Session) -> None:
+        self.session = session
 
+    def add_note(self, title: str, content: str) -> int:
+        with self.session.begin():
 
-        # try:
-        #     # new note
-        #     new_note = Notes(title=title,)
-        #     session.add(new_note)
-        #     session.flush()
-            
-        #     # new version
-        #     new_version = Versions(
-        #         note_id=new_note.note_id,
-        #         content=content,
-        #         version=1,
-        #     )  
-        #     session.add(new_version)
-        #     session.flush()
+            new_note = Note(title=title,)
+            self.session.add(new_note)
+            self.session.flush()
 
-        #     # add current version
-        #     current_version = CurrentVersions(
-        #         note_id=new_note.note_id,
-        #         version_id=new_version.version_id
-        #     )
-        #     session.add(current_version)
+            new_version = Version(
+                note_id=new_note.note_id,
+                content=content,
+                version=1,
+            )  
+            self.session.add(new_version)
+            self.session.flush()
 
-        # except:
-        #     session.rollback()
-        #     raise
-        # else:
-        #     session.commit()
+            current_version = CurrentVersion(
+                note_id=new_note.note_id,
+                version_id=new_version.version_id
+            )
+            self.session.add(current_version)
+
+        return new_note.note_id
+
+    def update_note(self, note_id: int, new_content: str):
+        with self.session.begin():
+            pass
 
 
 
@@ -71,49 +65,3 @@ def add_note(title: str, content: str):
 
 
 
-
-
-
-
-
-
-
-
-
-# from sqlalchemy.orm.session import Session
-# from .kb__models import Subject, Subtheme, Article
-# from sqlalchemy.orm import Session
-
-
-# def add_subject(db: Session, name):
-#     new_subject = Subject(
-#         name=name,
-#     )
-#     db.add(new_subject)
-#     db.commit()
-#     db.refresh(new_subject)
-
-#     return new_subject
-
-# def add_subtheme(db: Session, name, subject):
-#     new_subtheme = Subtheme(
-#         name=name,
-#         subject=subject,
-#     )
-#     db.add(new_subtheme)
-#     db.commit()
-#     db.refresh(new_subtheme)
-
-#     return new_subtheme
-
-
-# def add_article(db: Session, name, subtheme):
-#     new_article = Article(
-#         name=name,
-#         subtheme=subtheme
-#     )
-#     db.add(new_article)
-#     db.commit()
-#     db.refresh(new_article)
-
-#     return new_article

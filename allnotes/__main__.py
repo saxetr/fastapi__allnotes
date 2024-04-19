@@ -13,3 +13,6 @@ def main():
 
 if __name__ == "__main__": 
     # main()
+
+    from allnotes.kb.crud import session, add_note
+    add_note(session, 'test_note_1')

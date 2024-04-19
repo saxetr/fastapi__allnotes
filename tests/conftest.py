@@ -3,14 +3,47 @@ import pytest
 from sqlalchemy.orm import Session
 
 from allnotes.kb.crud import engine
-from allnotes.kb.models import Notes, Versions, CurrentVersions
+from allnotes.kb.models import Base, Note, Version
 
 
-    
+@pytest.fixture()
+def test_session():
+    Base.metadata.create_all(engine)
 
-# def add_note(title: str, content: str):
+    connection = engine.connect()
 
-# update_note(1, '<p>FUUUUUUUUUUUUUUUUUUUUUUUUUUUu</p>')
+    trans = connection.begin()
+
+    session = Session(bind=connection, join_transaction_mode="create_savepoint") 
+
+    yield session
+
+    session.close()
+
+    trans.rollback()
+
+    connection.close()
+
+
+@pytest.fixture
+def valid_note():
+    valid_note = Note(
+        title='test_note',
+    )
+
+    return valid_note
+
+
+@pytest.fixture
+def valid_version():
+    valid_version = Version(
+        content='<p>AAAAAAAAAAAf</p>',  # update_note(1, '<p>moooOOOOOOO</p>')
+        version=1,
+    )
+    return valid_version
+
+
+
 
 @pytest.fixture()
 def make_xml_tag_a():
@@ -31,11 +64,13 @@ def make_xml(make_xml_tag_a):
         'xmlns:xlink="http://www.w3.org/1999/xlink">'
     close_office = '</office:text>'
     
-    def inner(tag_name,       # h or p
-                tag_style_k=None,
-                tag_style_v=None,
-                tag_value="swesh etih majgkih", 
-                nested_tag_a=False):
+    def inner(
+            tag_name,       # h or p
+            tag_style_k=None,
+            tag_style_v=None,
+            tag_value="swesh etih majgkih", 
+            nested_tag_a=False
+    ):
         
         tag_style = '' if not tag_style_k else f' {tag_style_k}="{tag_style_v}"'
         
