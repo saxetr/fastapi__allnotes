@@ -1,5 +1,4 @@
-from uuid import uuid4
-from hashlib import md5
+import uuid
 from datetime import datetime
 
 from sqlalchemy import String, ForeignKey
@@ -22,18 +21,18 @@ class Note(Base):
     # Column("tags", String),
 
     def __repr__(self) -> str:
-        return f"Note(note_id={self.note_id!r}, title={self.title!r}"
+        return f"Note(note_id={self.note_id!r}, title={self.title!r})"
 
 
 class Version(Base):
     __tablename__ = "note_versions"
 
-    version_id: Mapped[UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4())   # as_uuid=True?
+    version_id: Mapped[UUID] = mapped_column(UUID, primary_key=True, default=uuid.uuid4) 
     note_id = mapped_column(ForeignKey("notes.note_id"), nullable=False)
     content: Mapped[str] = mapped_column(nullable=False)
     version: Mapped[int] = mapped_column(nullable=False)
-    timestamp: Mapped[datetime] = mapped_column(nullable=False, default=datetime.now())
-    # version_id: Mapped[str] = mapped_column(primary_key=True)
+    timestamp: Mapped[datetime] = mapped_column(nullable=False, default=datetime.now)
+    content_hash: Mapped[str] = mapped_column(nullable=True, unique=True)
 
 
 class CurrentVersion(Base):

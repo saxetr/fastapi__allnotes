@@ -3,26 +3,37 @@ import pytest
 from sqlalchemy.orm import Session
 
 from allnotes.kb.crud import engine
-from allnotes.kb.models import Base, Note, Version
+from allnotes.kb.models import Note, Version
+from allnotes.kb.crud import NoteRepo
+from allnotes.kb.prepare import generate_hash
 
 
 @pytest.fixture()
-def test_session():
-    Base.metadata.create_all(engine)
-
+def connection():
     connection = engine.connect()
+    yield connection
+    connection.close()
 
-    trans = connection.begin()
 
+@pytest.fixture()
+def transaction(connection):
+    transaction = connection.begin()
+    yield
+    transaction.rollback()
+
+
+@pytest.fixture()
+def session(connection, transaction):
     session = Session(bind=connection, join_transaction_mode="create_savepoint") 
 
     yield session
 
     session.close()
 
-    trans.rollback()
 
-    connection.close()
+@pytest.fixture()
+def note_repo(session): 
+    return NoteRepo(session)
 
 
 @pytest.fixture
@@ -36,11 +47,44 @@ def valid_note():
 
 @pytest.fixture
 def valid_version():
+    content = '<p>AAAAAAAAAAAf</p>'
+    content_hash = '5bfa5ba2690ae9405c467f7492f22957'
+
     valid_version = Version(
-        content='<p>AAAAAAAAAAAf</p>',  # update_note(1, '<p>moooOOOOOOO</p>')
+        content=content,
+        content_hash=content_hash,
         version=1,
     )
     return valid_version
+
+
+@pytest.fixture()
+def make_note(session):
+    def inner(
+            # note
+            title: str = 'test_title',
+            # version
+            content: str = '<p>test paragraph</p>',
+            version: int = 1
+    ):
+        content_hash = generate_hash(content)
+
+        note = Note(title=title)
+        session.add(note)
+        session.commit()
+
+        version = Version(
+            note_id=note.note_id,
+            content=content,
+            content_hash=content_hash,
+            version=version
+        )
+        session.add(version)
+        session.commit()
+
+        return {'note': note, 'version': version}
+
+    return inner
 
 
 

@@ -4,7 +4,7 @@
 заголовок и абзац - отдельные строки
 абзац может вмещать тег <a> и текст
 """
-
+from dataclasses import dataclass
 from xml.dom.minidom import Document, Node, Element
 
 
