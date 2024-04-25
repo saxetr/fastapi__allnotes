@@ -19,7 +19,6 @@ def test__add_note__success_added_title(session, valid_note, valid_version, note
 
 def test__add_note__raise_error_if_title_not_unique(valid_note, valid_version, note_repo, make_note):
     make_note(valid_note.title)
-    # make_note('valid_note')
 
     with pytest.raises(UniqueViolationError) as e:
         note_repo.add_note(valid_note.title, valid_version.content, valid_version.content_hash)
@@ -60,16 +59,15 @@ def test__add_note__link_title_with_first_content_version(session, valid_note, v
 
 #
 
-# def test__update_note__add_new_content_version_and_increment_version_number(session, note_repo, make_note):
-#     old_content = '<p>aaaaaaaaaaaaF</p>'
-#     new_content = '<p>moooOOOOOOO</p>'
-#     note = make_note(content=old_content)
-#     assert note["version"].version == 1
-#     version_id = note_repo.update_note(note_id=note["note"].note_id, content=new_content)
+def test__update_note__add_new_content_version_and_increment_version_number(session, note_repo, make_note):
+    old_content = '<p>aaaaaaaaaaaaF</p>'
+    new_content = '<p>moooOOOOOOO</p>'
+    note, version = make_note(content=old_content)
 
-#     new_version = session.query(Version).filter_by(version_id=version_id).first()
+    version_id = note_repo.update_note(note_id=note.note_id, new_content=new_content, new_content_hash='122ff233vv')
 
-#     assert new_version.content == new_content
-#     assert new_version.version == note["version"].version + 1
+    new_version = session.query(Version).filter_by(version_id=version_id).first()
+    assert new_version.content == new_content
+    assert new_version.version == version.version + 1
 
     

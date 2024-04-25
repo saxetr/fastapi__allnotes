@@ -24,7 +24,7 @@ url_object = URL.create(
     database=os.getenv("POSTGRES_DB"),
 )
 
-engine = create_engine(url_object)
+engine = create_engine(url_object, echo=True)
 
 # session = sessionmaker(engine)
 session = Session(engine)
@@ -76,7 +76,16 @@ class NoteRepo():
 
     def update_note(self, note_id: int, new_content: str, new_content_hash: str):
         with self.session.begin():
-            pass
+            new_version = Version(
+                note_id=note_id,
+                content=new_content,
+                content_hash=new_content_hash,
+                version=2
+            )
+            self.session.add(new_version)
+            self.session.commit()
+
+        return new_version.version_id
 
 
 
