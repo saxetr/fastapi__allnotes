@@ -6,7 +6,7 @@ from psycopg2.errors import UniqueViolation
 from dotenv import load_dotenv
 
 from sqlalchemy import create_engine, URL, text
-# from sqlalchemy import insert, select, update, delete
+from sqlalchemy import insert, select, update, delete
 from sqlalchemy.orm import sessionmaker, Session
 
 from allnotes.kb.models import Note, Version, CurrentVersion
@@ -76,14 +76,47 @@ class NoteRepo():
 
     def update_note(self, note_id: int, new_content: str, new_content_hash: str):
         with self.session.begin():
-            new_version = Version(
-                note_id=note_id,
-                content=new_content,
-                content_hash=new_content_hash,
-                version=2
-            )
-            self.session.add(new_version)
-            self.session.commit()
+            try:
+                select_cur_ver_stmt = (
+                    select(
+                        Version.version
+                    ).join_from(
+                        CurrentVersion, Version
+                    ).where(
+                        CurrentVersion.note_id == note_id
+                    )
+                )
+                current_version = self.session.scalar(select_cur_ver_stmt)
+
+                new_version = Version(
+                    note_id=note_id,
+                    content=new_content,
+                    content_hash=new_content_hash,
+                    version=current_version + 1
+                )
+                self.session.add(new_version)
+                self.session.flush()
+
+                update_cur_ver_stmt = (
+                    update(
+                        CurrentVersion
+                    ).where(
+                        CurrentVersion.note_id == note_id
+                    ).values(
+                        version_id=new_version.version_id
+                    )
+                )
+                self.session.execute(update_cur_ver_stmt)
+
+            except IntegrityError as e: 
+                if isinstance(e.orig, UniqueViolation):
+                    constraint = e.orig.diag.constraint_name
+                    table = e.orig.diag.table_name
+                    match constraint:
+                        case 'note_versions_content_hash_key':
+                            raise UniqueViolationError(entity=table, field='content_hash') from e
+                        
+                raise ConflictError('some_entity', 'some_reason')
 
         return new_version.version_id
 

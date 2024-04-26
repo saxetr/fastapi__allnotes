@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, scoped_session, sessionmaker, Session
 from sqlalchemy import event
 
 from allnotes.kb.crud import engine
-from allnotes.kb.models import Note, Version
+from allnotes.kb.models import Note, Version, CurrentVersion
 from allnotes.kb.crud import NoteRepo
 from allnotes.kb.prepare import generate_hash
 
@@ -23,89 +23,15 @@ def transaction(connection):
     transaction.rollback()
 
 
-@pytest.fixture(
-    scope='function',
-    autouse=True  # New test DB session for each test todo we need it only for tests with Client fixture
-)
+#
+
+@pytest.fixture()
 def session(connection, transaction):
-    """
-    SQLAlchemy session started with SAVEPOINT
-    After test rollback to this SAVEPOINT
-    """
-    # connection = engine().connect()
-
-    # begin a non-ORM transaction
-    # trans = connection.begin()
-    session = sessionmaker()(bind=connection, join_transaction_mode="create_savepoint")
-
-    session.begin_nested()  # SAVEPOINT
-
-    @event.listens_for(session, "after_transaction_end")
-    def restart_savepoint(session, transaction):
-        """
-        Each time that SAVEPOINT ends, reopen it
-        """
-        if transaction.nested and not transaction._parent.nested:
-            session.begin_nested()
+    session = Session(expire_on_commit=False, bind=connection, join_transaction_mode="create_savepoint") 
 
     yield session
 
     session.close()
-
-
-# @pytest.fixture()
-# def session(connection, transaction):
-#     session = Session(bind=connection, join_transaction_mode="create_savepoint") 
-
-#     yield session
-
-#     session.close()
-
-# @pytest.fixture(autouse=True)
-# def session(connection, request):
-#     """Returns a database session to be used in a test.
-
-#     This fixture also alters the application's database
-#     connection to run in a transactional fashion. This means
-#     that all tests will run within a transaction, all database
-#     operations will be rolled back at the end of each test,
-#     and no test data will be persisted after each test.
-
-#     `autouse=True` is used so that session is properly
-#     initialized at the beginning of the test suite and
-#     factories can use it automatically.
-#     """
-#     transaction = connection.begin()
-#     session = Session(bind=connection)
-#     # session.begin_nested()
-
-#     @event.listens_for(session, "after_transaction_end")
-#     def restart_savepoint(db_session, transaction):
-#         """Support tests with rollbacks.
-
-#         This is required for tests that call some services that issue
-#         rollbacks in try-except blocks.
-
-#         With this event the Session always runs all operations within
-#         the scope of a SAVEPOINT, which is established at the start of
-#         each transaction, so that tests can also rollback the
-#         “transaction” as well while still remaining in the scope of a
-#         larger “transaction” that’s never committed.
-#         """
-#         breakpoint()
-#         if transaction.nested and not transaction._parent.nested:
-#             # ensure that state is expired the way session.commit() at
-#             # the top level normally does
-#             session.expire_all()
-#             session.begin_nested()
-
-#     def teardown():
-#         Session.remove()
-#         transaction.rollback()
-
-#     request.addfinalizer(teardown)
-
-#     return session
 
 
 @pytest.fixture()
@@ -146,10 +72,12 @@ def make_note(session):
     ):
         content_hash = generate_hash(content)
 
+        # breakpoint()
+
         note = Note(title=title)
         session.add(note)
-        session.commit()
-        
+        session.flush()
+
         version = Version(
             note_id=note.note_id,
             content=content,
@@ -157,12 +85,17 @@ def make_note(session):
             version=version
         )
         session.add(version)
+        session.flush()
+
+        current_version = CurrentVersion(
+            note_id=note.note_id,
+            version_id=version.version_id
+        )
+        session.add(current_version)
+        session.flush()
+        # breakpoint()      # transaction is open
         session.commit()
-
-        # костыль
-        session.query(Note).first()
-        session.get_transaction().close()
-
+        # breakpoint()      # transaction is close, session.identity_map.keys() keep objects: Note, Version, CurrentVersion
         return note, version
 
     return inner

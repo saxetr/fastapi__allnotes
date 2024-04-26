@@ -34,6 +34,9 @@ class Version(Base):
     timestamp: Mapped[datetime] = mapped_column(nullable=False, default=datetime.now)
     content_hash: Mapped[str] = mapped_column(nullable=True, unique=True)
 
+    def __repr__(self) -> str:
+        return f"Version(version_id={self.version_id!r}, content={self.content!r}, content_hash={self.content_hash!r})"
+
 
 class CurrentVersion(Base):
     __tablename__ = "current_versions"
