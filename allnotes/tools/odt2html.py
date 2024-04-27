@@ -4,11 +4,11 @@
 заголовок и абзац - отдельные строки
 абзац может вмещать тег <a> и текст
 """
-
+from dataclasses import dataclass
 from xml.dom.minidom import Document, Node, Element
 
 
-from fastapi__allnotes.tools.errors import OdtUnknownTagError, OdtMissedElementAttrError, OdtUnknownHeaderError
+from allnotes.tools.errors import OdtUnknownTagError, OdtMissedElementAttrError, OdtUnknownHeaderError
 
 
 HEADERS = {"Heading_20_1": "1", "Heading_20_2": "2", "Heading_20_3": "3"}

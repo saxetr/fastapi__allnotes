@@ -2,8 +2,8 @@ from xml.dom.minidom import parseString
 
 import pytest
 
-from fastapi__allnotes.tools.odt2html import convert_xml_dom_to_html
-from fastapi__allnotes.tools.errors import OdtUnknownTagError, OdtMissedElementAttrError, OdtUnknownHeaderError
+from allnotes.tools.odt2html import convert_xml_dom_to_html
+from allnotes.tools.errors import OdtUnknownTagError, OdtMissedElementAttrError, OdtUnknownHeaderError
 
 
 def test__convert_xml_dom_to_html__return_html_paragraph_with_text_inside(make_xml):
