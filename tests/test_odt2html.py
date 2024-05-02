@@ -3,14 +3,18 @@ from xml.dom.minidom import parseString
 import pytest
 
 from allnotes.tools.odt2html import convert_xml_dom_to_html
-from allnotes.tools.errors import OdtUnknownTagError, OdtMissedElementAttrError, OdtUnknownHeaderError
+from allnotes.tools.errors import (
+    OdtUnknownTagError,
+    OdtMissedElementAttrError,
+    OdtUnknownHeaderError
+)
 
 
 def test__convert_xml_dom_to_html__return_html_paragraph_with_text_inside(make_xml):
     xml_src = parseString(make_xml(tag_name='p',
-                                   tag_value='default_text&amp;nbsp;&amp;nbsp;'))
+                                   tag_value='default_text&amp;nbsp;&amp;nbsp; 1'))
 
-    assert convert_xml_dom_to_html(xml_src) == '<p>default_text&nbsp;&nbsp;</p>'
+    assert convert_xml_dom_to_html(xml_src) == '<p>default_text&nbsp;&nbsp; 1</p>'
 
 
 def test__convert_xml_dom_to_html__return_html_paragraph_tag_with_nested_a_tag(make_xml):

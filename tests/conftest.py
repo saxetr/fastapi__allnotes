@@ -1,9 +1,10 @@
 import pytest
 
-from sqlalchemy.orm import Session, scoped_session, sessionmaker, Session
-from sqlalchemy import event
+from sqlalchemy.orm import Session
+# from sqlalchemy import event
+# from sqlalchemy.orm import scoped_session, sessionmaker
 
-from allnotes.kb.crud import engine
+from allnotes.kb.db import engine
 from allnotes.kb.models import Note, Version, CurrentVersion
 from allnotes.kb.crud import NoteRepo
 from allnotes.kb.prepare import generate_hash
@@ -27,7 +28,11 @@ def transaction(connection):
 
 @pytest.fixture()
 def session(connection, transaction):
-    session = Session(expire_on_commit=False, bind=connection, join_transaction_mode="create_savepoint") 
+    session = Session(
+        expire_on_commit=False,
+        bind=connection,
+        join_transaction_mode="create_savepoint"
+    )
 
     yield session
 
@@ -75,8 +80,10 @@ def make_note(session):
         # breakpoint()
 
         note = Note(title=title)
+        # breakpoint()        # Note(note_id=None, title='test_title')
         session.add(note)
         session.flush()
+        # breakpoint()        # Note(note_id=246, title='test_title')
 
         version = Version(
             note_id=note.note_id,
@@ -106,10 +113,10 @@ def make_note(session):
 @pytest.fixture()
 def make_xml_tag_a():
     return (
-            '<text:a xlink:type="simple" xlink:href="https://docs.python.org/3/library/xml.html" ' \
-            'text:style-name="Internet_20_link" ' \
-            'text:visited-style-name="Visited_20_Internet_20_Link">' \
-            'https://docs.python.org/3/library/xml.html' \
+            '<text:a xlink:type="simple" xlink:href="https://docs.python.org/3/library/xml.html" '
+            'text:style-name="Internet_20_link" '
+            'text:visited-style-name="Visited_20_Internet_20_Link">'
+            'https://docs.python.org/3/library/xml.html'
             '</text:a>'
     )
 
