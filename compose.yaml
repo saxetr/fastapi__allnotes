@@ -1,26 +1,39 @@
 volumes:
-    db-allnotes:
+  db-allnotes:
+
+networks:
+  back-tier:
 
 services:
   #
+  api:
+    container_name: fastapi-allnotes
+    image: fastapi__allnotes:1
+    environment:
+        POSTGRES_USER: ${POSTGRES_USER}
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+        POSTGRES_DB: ${POSTGRES_DB}
+        POSTGRES_HOST: "db_pg"
+    ports:
+      - "8460:80"
+    networks:
+      - back-tier
+
+  #
   db_pg:
+    container_name: db-pg
     image: "postgres:15.6"
     environment:
         POSTGRES_USER: ${POSTGRES_USER}
         POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
         POSTGRES_DB: ${POSTGRES_DB}
-    healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-        interval: 1s
-        timeout: 5s
-        retries: 10
-        start_period: 40s
-        start_interval: 5s
     ports:
       - name: main_port
         target: 5432
-        host_ip: 127.0.0.1
+        host_ip: 0.0.0.0
         published: "5432"
+    networks:
+      - back-tier
     volumes:
       - type: volume
         source: db-allnotes
